@@ -16,9 +16,21 @@ const formatPhone = (phone) => {
   return phone.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
 };
 
+const totalPages = (total, itemsPerPage) => {
+  const roundTotal =
+    Number(total) % Number(itemsPerPage)
+      ? Number(total) +
+        Number(itemsPerPage) -
+        (Number(total) % Number(itemsPerPage))
+      : Number(total);
+  const totalPages = Math.ceil(roundTotal / itemsPerPage);
+  return totalPages;
+};
+
 module.exports = {
   formatDate,
   formatHours,
   formatCpf,
   formatPhone,
+  totalPages,
 };

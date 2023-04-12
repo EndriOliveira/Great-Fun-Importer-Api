@@ -1,6 +1,7 @@
 const uuid = require('uuid');
 const { genSalt, hash, compare } = require('bcryptjs');
 const { user } = require('../database/models');
+const { Op } = require('sequelize');
 
 class UsersService {
   async createUser(data) {
@@ -37,9 +38,10 @@ class UsersService {
     }
   }
 
-  async listAllUsers() {
+  async listAllUsers(query) {
+    query.user = query.user == undefined ? '' : query.user;
     try {
-      return await user.findAll({
+      return await user.findAndCountAll({
         attributes: [
           'id',
           'name',
@@ -49,6 +51,14 @@ class UsersService {
           'role',
           'createdAt',
         ],
+        where: {
+          [Op.or]: [
+            { email: { [Op.like]: `%${query.user}%` } },
+            { name: { [Op.like]: `%${query.user}%` } },
+          ],
+        },
+        offset: (query.page - 1) * query.limit,
+        limit: query.limit,
       });
     } catch (error) {
       throw new Error('Internal server error');

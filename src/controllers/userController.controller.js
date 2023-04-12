@@ -2,7 +2,8 @@ require('dotenv').config();
 
 const jwt = require('jsonwebtoken');
 const usersService = require('../services/users.service');
-const { formatCpf, formatPhone } = require('../utils/utils');
+const { formatCpf, formatPhone, totalPages } = require('../utils/utils');
+const { validateCPF } = require('../utils/validateCpf');
 
 class UsersController {
   async createUser(req, res, next) {
@@ -16,15 +17,23 @@ class UsersController {
         cpf,
         acceptTerms,
       } = req.body;
+
+      if (!validateCPF(cpf)) {
+        return next({
+          status: 401,
+          message: 'Invalid CPF',
+          error: 'Unauthorized',
+        });
+      }
       if (password !== confirmPassword) {
-        next({
+        return next({
           status: 401,
           message: 'Passwords do not match',
           error: 'Unauthorized',
         });
       }
       if (!acceptTerms) {
-        next({
+        return next({
           status: 401,
           message: 'You must accept the terms of use',
           error: 'Unauthorized',
@@ -43,13 +52,13 @@ class UsersController {
       });
     } catch (error) {
       if (error.message.includes('already exists')) {
-        next({
+        return next({
           status: 409,
           message: error.message,
           error: 'Conflict',
         });
       } else {
-        next({
+        return next({
           status: 500,
           message: error.message,
           error: 'Internal server error',
@@ -76,13 +85,13 @@ class UsersController {
       });
     } catch (error) {
       if (error.message.includes('Invalid Credentials')) {
-        next({
+        return next({
           status: 401,
           message: error.message,
           error: 'Unauthorized',
         });
       } else {
-        next({
+        return next({
           status: 500,
           message: error.message,
           error: 'Internal server error',
@@ -92,14 +101,23 @@ class UsersController {
   }
 
   async listAllUsers(req, res, next) {
-    // TODO: Criar req params para paginação
+    let { page, limit, user } = req.query;
+    page = isNaN(page) ? 1 : page;
+    limit = isNaN(limit) || limit > 100 ? 100 : limit;
     try {
-      const users = await usersService.listAllUsers();
+      const users = await usersService.listAllUsers({
+        page,
+        limit,
+        user,
+      });
       return res.status(200).json({
-        users,
+        users: users.rows,
+        total: Number(users.count),
+        page: Number(page),
+        pages: Number(totalPages(users.count, limit)),
       });
     } catch (error) {
-      next({
+      return next({
         status: 500,
         message: error.message,
         error: 'Internal server error',
