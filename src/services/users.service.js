@@ -27,12 +27,31 @@ class UsersService {
     }
   }
 
+  async editUser(data) {
+    const { userId, id, name, password, phone, cpf } = data;
+    const userExists = await user.findOne({ where: { id } });
+    if (!userExists) throw new Error('User not found');
+    if (userId != id) throw new Error('Unauthorized');
+    if (await compare(password, userExists.password)) {
+      return await user.update(
+        {
+          name: name ? name : userExists.name,
+          phone: phone ? phone : userExists.phone,
+          cpf: cpf ? cpf : userExists.cpf,
+        },
+        { where: { id } }
+      );
+    } else {
+      throw new Error('Invalid Credentials');
+    }
+  }
+
   async login(data) {
     const { email, password } = data;
-    const emailExists = await user.findOne({ where: { email } });
-    if (!emailExists) throw new Error('Invalid Credentials');
-    if (await compare(password, emailExists.password)) {
-      return emailExists;
+    const userExists = await user.findOne({ where: { email } });
+    if (!userExists) throw new Error('Invalid Credentials');
+    if (await compare(password, userExists.password)) {
+      return userExists;
     } else {
       throw new Error('Invalid Credentials');
     }
