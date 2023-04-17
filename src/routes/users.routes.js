@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const usersController = require('../controllers/userController.controller');
+const usersController = require('../controllers/user.controller');
 const GetUser = require('../decorators/get-user.decorator');
 const validateSchema = require('../middlewares/validateSchema');
 const editUserSchema = require('../utils/schemas/editUser.schema');
@@ -20,6 +20,15 @@ router.put(
   validateSchema(editUserSchema),
   usersController.editUser
 );
-// TODO: Add delete user route(Only available for admins)
+
+router.delete(
+  '/users/:id',
+  GetUser(),
+  /* #swagger.tags = ['Users']
+  #swagger.security = [{
+    "bearerAuth": []
+  }] */
+  usersController.deleteUser
+);
 
 module.exports = router;

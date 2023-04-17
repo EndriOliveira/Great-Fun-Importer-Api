@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const usersController = require('../controllers/userController.controller');
+const authController = require('../controllers/auth.controller');
 const validateSchema = require('../middlewares/validateSchema');
 const createUserSchema = require('../utils/schemas/createUser.schema');
 const loginSchema = require('../utils/schemas/login.schema');
@@ -21,14 +21,14 @@ router.post(
   '/auth/signin',
   /* #swagger.tags = ['Auth'] */
   validateSchema(loginSchema),
-  usersController.login
+  authController.login
 );
 
 router.post(
   '/auth/signup',
   /* #swagger.tags = ['Auth'] */
   validateSchema(createUserSchema),
-  usersController.createUser
+  authController.createUser
 );
 
 module.exports = router;

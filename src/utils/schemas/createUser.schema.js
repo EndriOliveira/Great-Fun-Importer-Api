@@ -16,18 +16,11 @@ module.exports = Joi.object({
     'string.empty': 'Phone cannot be an empty field',
     'any.required': 'Phone is a required field',
   }),
-  cpf: Joi.string()
-    .min(11)
-    .max(11)
-    .trim(true)
-    .required()
-    .label('CPF')
-    .messages({
-      'string.min': 'CPF must be 11 characters',
-      'string.max': 'CPF must be 11 characters',
-      'string.empty': 'CPF cannot be an empty field',
-      'any.required': 'CPF is a required field',
-    }),
+  cpf: Joi.string().min(11).trim(true).required().label('CPF').messages({
+    'string.min': 'CPF must be 11 characters',
+    'string.empty': 'CPF cannot be an empty field',
+    'any.required': 'CPF is a required field',
+  }),
   password: Joi.string()
     .pattern(
       new RegExp(

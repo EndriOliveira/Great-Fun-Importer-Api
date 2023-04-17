@@ -57,6 +57,13 @@ class UsersService {
     }
   }
 
+  async deleteUser(data) {
+    const { id } = data;
+    const userExists = await user.destroy({ where: { id } });
+    if (userExists == 0) throw new Error('User not found');
+    return;
+  }
+
   async listAllUsers(query) {
     query.user = query.user == undefined ? '' : query.user;
     try {

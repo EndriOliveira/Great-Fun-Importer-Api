@@ -9,9 +9,8 @@ module.exports = Joi.object({
     'string.min': 'Phone must be at least 11 characters',
     'string.empty': 'Phone cannot be an empty field',
   }),
-  cpf: Joi.string().min(11).max(11).trim(true).label('CPF').messages({
+  cpf: Joi.string().min(11).trim(true).label('CPF').messages({
     'string.min': 'CPF must be 11 characters',
-    'string.max': 'CPF must be 11 characters',
     'string.empty': 'CPF cannot be an empty field',
   }),
   password: Joi.string().label('Password').required().trim(true).messages({
