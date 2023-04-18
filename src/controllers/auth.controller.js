@@ -2,8 +2,16 @@ require('dotenv').config();
 
 const jwt = require('jsonwebtoken');
 const usersService = require('../services/users.service');
-const { formatCpf, formatPhone } = require('../utils/utils');
+const {
+  formatCpf,
+  formatPhone,
+  generateRandomCode,
+} = require('../utils/utils');
 const { validateCPF } = require('../utils/validateCpf');
+const { sendMail } = require('../services/sendMail.service');
+const {
+  templateForgetPassword,
+} = require('../templates/forgetPasswordEmail.template');
 
 class AuthController {
   async createUser(req, res, next) {
@@ -89,6 +97,49 @@ class AuthController {
           status: 401,
           message: error.message,
           error: 'Unauthorized',
+        });
+      } else {
+        return next({
+          status: 500,
+          message: error.message,
+          error: 'Internal server error',
+        });
+      }
+    }
+  }
+
+  async forgetPassword(req, res, next) {
+    try {
+      const { email } = req.body;
+      const code = generateRandomCode(6);
+      const user = await usersService.forgetPassword({
+        email,
+        code,
+      });
+      if (user) {
+        await sendMail(
+          templateForgetPassword({
+            email,
+            name: user.name,
+            code,
+          })
+        );
+        return res.status(200).json({
+          message: 'A reset code has been sent to your email',
+        });
+      } else {
+        return next({
+          status: 404,
+          message: 'User not found',
+          error: 'Not found',
+        });
+      }
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        return next({
+          status: 404,
+          message: error.message,
+          error: 'Not found',
         });
       } else {
         return next({

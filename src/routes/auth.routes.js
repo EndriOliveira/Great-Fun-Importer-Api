@@ -3,6 +3,7 @@ const authController = require('../controllers/auth.controller');
 const validateSchema = require('../middlewares/validateSchema');
 const createUserSchema = require('../utils/schemas/createUser.schema');
 const loginSchema = require('../utils/schemas/login.schema');
+const forgetPasswordSchema = require('../utils/schemas/forgetPassword.schema');
 const GetUser = require('../decorators/get-user.decorator');
 
 router.get(
@@ -29,6 +30,13 @@ router.post(
   /* #swagger.tags = ['Auth'] */
   validateSchema(createUserSchema),
   authController.createUser
+);
+// TODO: Implement forget password feature
+router.post(
+  '/auth/forget-password',
+  /* #swagger.tags = ['Auth'] */
+  validateSchema(forgetPasswordSchema),
+  authController.forgetPassword
 );
 
 module.exports = router;

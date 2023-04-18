@@ -57,6 +57,20 @@ class UsersService {
     }
   }
 
+  async forgetPassword(data) {
+    const { email, code } = data;
+    const userExists = await user.findOne({ where: { email } });
+    if (!userExists) throw new Error('User not found');
+    await user.update(
+      {
+        code,
+        resetPasswordExpires: Date.now() + 3600000,
+      },
+      { where: { email } }
+    );
+    return userExists;
+  }
+
   async deleteUser(data) {
     const { id } = data;
     const userExists = await user.destroy({ where: { id } });
