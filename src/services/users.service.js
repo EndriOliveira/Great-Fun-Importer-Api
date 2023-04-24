@@ -4,6 +4,11 @@ const { user } = require('../database/models');
 const { Op } = require('sequelize');
 
 class UsersService {
+  async hashPassword(password) {
+    const salt = await genSalt(10);
+    return await hash(password, salt);
+  }
+
   async createUser(data) {
     const { name, email, password, phone, cpf, acceptTerms } = data;
     const emailExists = await user.findOne({ where: { email } });
@@ -11,12 +16,11 @@ class UsersService {
     if (emailExists) throw new Error('Email already exists');
     if (cpfExists) throw new Error('CPF already exists');
     try {
-      const salt = await genSalt(10);
       return await user.create({
         id: uuid.v4(),
         name,
         email,
-        password: await hash(password, salt),
+        password: await this.hashPassword(password),
         phone,
         cpf,
         acceptTerms,
@@ -67,6 +71,25 @@ class UsersService {
         resetPasswordExpires: Date.now() + 3600000,
       },
       { where: { email } }
+    );
+    return userExists;
+  }
+
+  async resetPassword(data) {
+    const { password, code } = data;
+    const userExists = await user.findOne({ where: { code } });
+    if (!userExists) throw new Error('User not found');
+
+    if (Date.now() > userExists.resetPasswordExpires)
+      throw new Error('Token expired');
+
+    await user.update(
+      {
+        password: await this.hashPassword(password),
+        code: null,
+        resetPasswordExpires: null,
+      },
+      { where: { code } }
     );
     return userExists;
   }

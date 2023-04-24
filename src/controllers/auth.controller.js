@@ -150,6 +150,48 @@ class AuthController {
       }
     }
   }
+
+  async resetPassword(req, res, next) {
+    try {
+      const { code, password, confirmPassword } = req.body;
+      if (password !== confirmPassword) {
+        return next({
+          status: 401,
+          message: 'Passwords do not match',
+          error: 'Unauthorized',
+        });
+      }
+      const user = await usersService.resetPassword({
+        password,
+        code,
+      });
+      if (user) {
+        return res.status(200).json({
+          message: 'Password changed successfully',
+        });
+      } else {
+        return next({
+          status: 404,
+          message: 'User not found',
+          error: 'Not found',
+        });
+      }
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        return next({
+          status: 404,
+          message: error.message,
+          error: 'Not found',
+        });
+      } else {
+        return next({
+          status: 500,
+          message: error.message,
+          error: 'Internal server error',
+        });
+      }
+    }
+  }
 }
 
 module.exports = new AuthController();
