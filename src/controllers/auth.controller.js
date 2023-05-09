@@ -8,6 +8,7 @@ const {
   generateRandomCode,
 } = require('../utils/utils');
 const { validateCPF } = require('../utils/validateCpf');
+const { verifyEmail } = require('../utils/validateEmail');
 const { sendMail } = require('../services/sendMail.service');
 const {
   templateForgetPassword,
@@ -26,28 +27,36 @@ class AuthController {
         acceptTerms,
       } = req.body;
 
+      if (!verifyEmail(email)) {
+        return next({
+          status: 400,
+          message: 'Invalid email',
+          error: 'Bad Request',
+        });
+      }
+
       if (!validateCPF(cpf)) {
         return next({
-          status: 401,
+          status: 400,
           message: 'Invalid CPF',
-          error: 'Unauthorized',
+          error: 'Bad Request',
         });
       }
       if (password !== confirmPassword) {
         return next({
-          status: 401,
+          status: 400,
           message: 'Passwords do not match',
-          error: 'Unauthorized',
+          error: 'Bad Request',
         });
       }
       if (!acceptTerms) {
         return next({
-          status: 401,
+          status: 400,
           message: 'You must accept the terms of use',
-          error: 'Unauthorized',
+          error: 'Bad Request',
         });
       }
-      await usersService.createUser({
+      const user = await usersService.createUser({
         name,
         email,
         password,
@@ -55,8 +64,15 @@ class AuthController {
         cpf: formatCpf(cpf),
         acceptTerms,
       });
-      return res.status(200).json({
+      return res.status(201).json({
         message: 'User created',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          cpf: user.cpf,
+        },
       });
     } catch (error) {
       if (error.message.includes('already exists')) {
@@ -156,9 +172,9 @@ class AuthController {
       const { code, password, confirmPassword } = req.body;
       if (password !== confirmPassword) {
         return next({
-          status: 401,
+          status: 400,
           message: 'Passwords do not match',
-          error: 'Unauthorized',
+          error: 'Bad Request',
         });
       }
       const user = await usersService.resetPassword({
@@ -182,6 +198,62 @@ class AuthController {
           status: 404,
           message: error.message,
           error: 'Not found',
+        });
+      } else if (error.message.includes('Credentials')) {
+        return next({
+          status: 401,
+          message: error.message,
+          error: 'Invalid Credentials',
+        });
+      } else {
+        return next({
+          status: 500,
+          message: error.message,
+          error: 'Internal server error',
+        });
+      }
+    }
+  }
+
+  async changePassword(req, res, next) {
+    try {
+      const { password, newPassword, confirmPassword } = req.body;
+      const user = req.user;
+      if (newPassword !== confirmPassword) {
+        return next({
+          status: 401,
+          message: 'Passwords do not match',
+          error: 'Unauthorized',
+        });
+      }
+      const changeUserPassword = await usersService.changePassword({
+        userId: user.id,
+        password,
+        newPassword,
+      });
+      if (changeUserPassword) {
+        return res.status(200).json({
+          message: 'Password changed successfully',
+        });
+      } else {
+        return next({
+          status: 404,
+          message: 'User not found',
+          error: 'Not found',
+        });
+      }
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        return next({
+          status: 404,
+          message: error.message,
+          error: 'Not found',
+        });
+      } else if (error.message.includes('Credentials')) {
+        return next({
+          status: 401,
+          message: error.message,
+          error: 'Unauthorized',
         });
       } else {
         return next({

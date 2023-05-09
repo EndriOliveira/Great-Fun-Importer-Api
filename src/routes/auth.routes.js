@@ -5,6 +5,7 @@ const createUserSchema = require('../utils/schemas/createUser.schema');
 const loginSchema = require('../utils/schemas/login.schema');
 const forgetPasswordSchema = require('../utils/schemas/forgetPassword.schema');
 const resetPasswordSchema = require('../utils/schemas/resetPassword.schema');
+const changePasswordSchema = require('../utils/schemas/changePassword.schema');
 const GetUser = require('../decorators/get-user.decorator');
 
 router.get(
@@ -31,6 +32,17 @@ router.post(
   /* #swagger.tags = ['Auth'] */
   validateSchema(createUserSchema),
   authController.createUser
+);
+
+router.post(
+  '/auth/change-password',
+  /* #swagger.tags = ['Auth']
+  #swagger.security = [{
+    "bearerAuth": []
+  }] */
+  GetUser(),
+  validateSchema(changePasswordSchema),
+  authController.changePassword
 );
 
 router.post(

@@ -36,9 +36,9 @@ class UsersController {
     const { name, phone, cpf, password } = req.body;
     if (cpf && !validateCPF(cpf)) {
       return next({
-        status: 401,
+        status: 400,
         message: 'Invalid CPF',
-        error: 'Unauthorized',
+        error: 'Bad Request',
       });
     }
     try {
@@ -81,9 +81,9 @@ class UsersController {
     const { role } = req.user;
     if (role !== 'ADMIN') {
       return next({
-        status: 401,
+        status: 403,
         message: 'You do not have permission to delete a user',
-        error: 'Unauthorized',
+        error: 'Forbidden',
       });
     }
     try {

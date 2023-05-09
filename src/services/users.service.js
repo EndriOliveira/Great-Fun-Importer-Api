@@ -94,6 +94,21 @@ class UsersService {
     return userExists;
   }
 
+  async changePassword(data) {
+    const { userId, password, newPassword } = data;
+    const userExists = await user.findOne({ where: { id: userId } });
+    if (!userExists) throw new Error('User not found');
+
+    if (!(await compare(password, userExists.password)))
+      throw new Error('Invalid Credentials');
+
+    await user.update(
+      { password: await this.hashPassword(newPassword) },
+      { where: { id: userId } }
+    );
+    return userExists;
+  }
+
   async deleteUser(data) {
     const { id } = data;
     const userExists = await user.destroy({ where: { id } });

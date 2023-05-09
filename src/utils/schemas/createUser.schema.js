@@ -1,8 +1,8 @@
 const Joi = require('joi');
 
 module.exports = Joi.object({
-  name: Joi.string().min(6).trim(true).required().label('Name').messages({
-    'string.min': 'Name must be at least 6 characters',
+  name: Joi.string().min(2).trim(true).required().label('Name').messages({
+    'string.min': 'Name must be at least 2 characters',
     'string.base': 'Name should be a type of text',
     'string.empty': 'Name cannot be an empty field',
     'any.required': 'Name is a required field',
