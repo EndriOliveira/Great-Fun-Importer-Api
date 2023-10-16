@@ -13,6 +13,8 @@ const { sendMail } = require('../services/sendMail.service');
 const {
   templateForgetPassword,
 } = require('../templates/forgetPasswordEmail.template');
+const httpStatus = require('http-status');
+const ApiError = require('../middlewares/ApiError');
 
 class AuthController {
   async createUser(req, res, next) {
@@ -27,35 +29,29 @@ class AuthController {
         acceptTerms,
       } = req.body;
 
-      if (!verifyEmail(email)) {
-        return next({
-          status: 400,
-          message: 'Invalid email',
-          error: 'Bad Request',
-        });
-      }
+      if (!verifyEmail(email))
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          'Invalid email',
+          httpStatus[400]
+        );
 
-      if (!validateCPF(cpf)) {
-        return next({
-          status: 400,
-          message: 'Invalid CPF',
-          error: 'Bad Request',
-        });
-      }
+      if (!validateCPF(cpf))
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          'Invalid CPF',
+          httpStatus[400]
+        );
+
       if (password !== confirmPassword) {
-        return next({
-          status: 400,
-          message: 'Passwords do not match',
-          error: 'Bad Request',
-        });
+        throw new ApiError(400, 'Passwords do not match', 'Bad Request');
       }
-      if (!acceptTerms) {
-        return next({
-          status: 400,
-          message: 'You must accept the terms of use',
-          error: 'Bad Request',
-        });
-      }
+      if (!acceptTerms)
+        throw new ApiError(
+          httpStatus.BAD_REQUEST,
+          'You must accept the terms of use',
+          httpStatus[400]
+        );
       const user = await usersService.createUser({
         name,
         email,
@@ -75,19 +71,7 @@ class AuthController {
         },
       });
     } catch (error) {
-      if (error.message.includes('already exists')) {
-        return next({
-          status: 409,
-          message: error.message,
-          error: 'Conflict',
-        });
-      } else {
-        return next({
-          status: 500,
-          message: error.message,
-          error: 'Internal server error',
-        });
-      }
+      next(error);
     }
   }
 
